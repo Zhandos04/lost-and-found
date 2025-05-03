@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{% if status == 'lost' %}Потерянные{% elif status == 'found' %}Найденные{% else %}Все{% endif %} предметы{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Фильтры</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{% url 'search' %}" id="filter-form">
+                    <div class="form-group">
+                        <label for="{{ search_form.search_query.id_for_label }}">Поисковый запрос</label>
+                        {{ search_form.search_query }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ search_form.category.id_for_label }}">Категория</label>
+                        {{ search_form.category }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ search_form.status.id_for_label }}">Статус</label>
+                        {{ search_form.status }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ search_form.date_from.id_for_label }}">Дата от</label>
+                        {{ search_form.date_from }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ search_form.date_to.id_for_label }}">Дата до</label>
+                        {{ search_form.date_to }}
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-filter mr-1"></i> Применить фильтры
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>{% if status == 'lost' %}Потерянные{% elif status == 'found' %}Найденные{% else %}Все{% endif %} предметы</h2>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-sort mr-1"></i> Сортировка
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="sortDropdown">
+                    <a class="dropdown-item" href="?sort=date_posted">По дате публикации (сначала новые)</a>
+                    <a class="dropdown-item" href="?sort=date_lost_found">По дате потери/находки (сначала новые)</a>
+                    <a class="dropdown-item" href="?sort=title">По названию (А-Я)</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for item in items %}
+                <div class="col-sm-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        {% if item.image %}
+                            <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+                        {% else %}
+                            <div class="card-img-top bg-light text-center py-5">
+                                <i class="fas {% if item.status == 'lost' %}fa-search{% else %}fa-box-open{% endif %} fa-3x text-secondary"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <span class="badge {% if item.status == 'lost' %}badge-danger{% elif item.status == 'found' %}badge-success{% elif item.status == 'claimed' %}badge-warning{% else %}badge-info{% endif %} mb-2">
+                                {{ item.get_status_display }}
+                            </span>
+                            <h5 class="card-title">{{ item.title }}</h5>
+                            <p class="card-text small text-muted">
+                                <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
+                                <i class="fas fa-calendar-alt"></i> {{ item.date_lost_found|date:"d.m.Y" }}<br>
+                                <i class="fas fa-user"></i> {{ item.user.username }}
+                            </p>
+                            <p class="card-text text-truncate-2">{{ item.description|truncatechars:100 }}</p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a href="{% url 'item-detail' item.id %}" class="btn btn-sm btn-outline-primary btn-block">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        {% if status == 'lost' %}
+                            Объявлений о потерянных предметах пока нет.
+                        {% elif status == 'found' %}
+                            Объявлений о найденных предметах пока нет.
+                        {% else %}
+                            Объявлений пока нет.
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if items.has_other_pages %}
+        <nav aria-label="Навигация по страницам" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if items.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">Первая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ items.previous_page_number }}">Предыдущая</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Первая</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Предыдущая</span>
+                    </li>
+                {% endif %}
+                
+                {% for num in items.paginator.page_range %}
+                    {% if items.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > items.number|add:'-3' and num < items.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if items.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ items.next_page_number }}">Следующая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ items.paginator.num_pages }}">Последняя</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Следующая</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Последняя</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

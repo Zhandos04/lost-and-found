@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="jumbotron p-4 p-md-5 text-white rounded bg-primary">
+    <div class="col-md-8 px-0">
+        <h1 class="display-4 font-weight-bold">Потеряли или нашли что-то?</h1>
+        <p class="lead my-3">Наш сервис поможет вам найти потерянные вещи или вернуть найденные предметы их владельцам.</p>
+        <p class="lead mb-0">
+            <a href="{% url 'item-create' %}" class="btn btn-lg btn-light font-weight-bold">Подать объявление</a>
+        </p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-body text-center">
+                <h2 class="card-title"><i class="fas fa-search"></i> {{ lost_count }}</h2>
+                <p class="card-text">Потерянных вещей</p>
+                <a href="{% url 'item-list-filtered' 'lost' %}" class="btn btn-light">Посмотреть все</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body text-center">
+                <h2 class="card-title"><i class="fas fa-box-open"></i> {{ found_count }}</h2>
+                <p class="card-text">Найденных вещей</p>
+                <a href="{% url 'item-list-filtered' 'found' %}" class="btn btn-light">Посмотреть все</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body text-center">
+                <h2 class="card-title"><i class="fas fa-undo-alt"></i> {{ returned_count }}</h2>
+                <p class="card-text">Возвращено владельцам</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>Категории</h3>
+        <div class="row">
+            {% for category in categories %}
+                <div class="col-6 col-md-4 mb-3">
+                    <a href="{% url 'search' %}?category={{ category.id }}" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tag fa-2x mb-2 text-primary"></i>
+                                <h5 class="card-title">{{ category.name }}</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h3>Поиск</h3>
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{% url 'search' %}">
+                    <div class="form-group">
+                        {{ search_form.search_query.label_tag }}
+                        {{ search_form.search_query }}
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            {{ search_form.category.label_tag }}
+                            {{ search_form.category }}
+                        </div>
+                        <div class="form-group col-md-6">
+                            {{ search_form.status.label_tag }}
+                            {{ search_form.status }}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Искать</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-5">
+    <h3>Последние объявления</h3>
+    <div class="row">
+        {% for item in items %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+                    {% else %}
+                        <div class="card-img-top bg-light text-center py-5">
+                            <i class="fas {% if item.status == 'lost' %}fa-search{% else %}fa-box-open{% endif %} fa-3x text-secondary"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <span class="badge {% if item.status == 'lost' %}badge-danger{% else %}badge-success{% endif %} mb-2">
+                            {{ item.get_status_display }}
+                        </span>
+                        <h5 class="card-title">{{ item.title }}</h5>
+                        <p class="card-text small text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
+                            <i class="fas fa-calendar-alt"></i> {{ item.date_lost_found|date:"d.m.Y" }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <a href="{% url 'item-detail' item.id %}" class="btn btn-sm btn-outline-primary btn-block">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Нет объявлений для отображения.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

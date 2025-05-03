@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="badge {% if item.status == 'lost' %}badge-danger{% elif item.status == 'found' %}badge-success{% elif item.status == 'claimed' %}badge-warning{% else %}badge-info{% endif %} p-2">
+                    {{ item.get_status_display }}
+                </span>
+                <small class="text-muted">Опубликовано {{ item.date_posted|date:"d.m.Y H:i" }}</small>
+            </div>
+            {% if item.image %}
+                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h1 class="card-title">{{ item.title }}</h1>
+                <p class="card-text">{{ item.description }}</p>
+                
+                {% if item.ai_description %}
+                    <h5>AI-описание предмета:</h5>
+                    <p class="card-text bg-light p-3 rounded">{{ item.ai_description }}</p>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Детали:</h5>
+                        <ul class="list-unstyled">
+                            <li><strong>Категория:</strong> {{ item.category.name }}</li>
+                            <li><strong>Дата потери/находки:</strong> {{ item.date_lost_found|date:"d.m.Y" }}</li>
+                            <li><strong>Место:</strong> {{ item.location }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Контакт:</h5>
+                        {% if user.is_authenticated %}
+                            <p>{{ item.contact_info }}</p>
+                        {% else %}
+                            <p><a href="{% url 'login' %}">Войдите</a>, чтобы увидеть контактную информацию.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                {% if user.is_authenticated and user == item.user %}
+                    <div class="btn-group">
+                        <a href="{% url 'item-update' item.pk %}" class="btn btn-outline-primary">Редактировать</a>
+                        <a href="{% url 'item-delete' item.pk %}" class="btn btn-outline-danger">Удалить</a>
+                        {% if item.claims.exists %}
+                            <a href="{% url 'manage-claims' item.pk %}" class="btn btn-outline-warning">Управление претензиями ({{ item.claims.count }})</a>
+                        {% endif %}
+                    </div>
+                {% elif user.is_authenticated and item.status == 'found' %}
+                    {% if not has_claimed %}
+                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#claimModal">
+                            Это моя вещь
+                        </button>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            Вы уже отправили претензию на этот предмет.
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Автор объявления</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ item.user.username }}</h6>
+                <p class="text-muted small">На сайте с {{ item.user.date_joined|date:"d.m.Y" }}</p>
+                {% if user.is_authenticated and user != item.user %}
+                    <hr>
+                    <h6>Что делать дальше?</h6>
+                    <p class="small">
+                        {% if item.status == 'lost' %}
+                            Если вы нашли этот предмет, свяжитесь с автором объявления, используя указанную контактную информацию.
+                        {% else %}
+                            Если вы считаете, что эта вещь принадлежит вам, нажмите кнопку "Это моя вещь" и предоставьте доказательства владения.
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Похожие объявления</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for related_item in item.category.item_set.all|slice:":5" %}
+                    {% if related_item.id != item.id %}
+                        <a href="{% url 'item-detail' related_item.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ related_item.title }}</h6>
+                                <span class="badge {% if related_item.status == 'lost' %}badge-danger{% else %}badge-success{% endif %}">
+                                    {{ related_item.get_status_display }}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ related_item.location }} • {{ related_item.date_lost_found|date:"d.m.Y" }}</small>
+                        </a>
+                    {% endif %}
+                {% empty %}
+                    <div class="list-group-item">
+                        Нет похожих объявлений.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated and item.status == 'found' and not has_claimed %}
+<!-- Модальное окно для формы претензии -->
+<div class="modal fade" id="claimModal" tabindex="-1" aria-labelledby="claimModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="claimModalLabel">Претензия на предмет "{{ item.title }}"</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'create-claim' item.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Чтобы подтвердить, что этот предмет принадлежит вам, пожалуйста, предоставьте следующую информацию:</p>
+                    <div class="form-group">
+                        <label for="{{ claim_form.description.id_for_label }}">Описание предмета</label>
+                        {{ claim_form.description }}
+                        <small class="form-text text-muted">Опишите предмет подробно, включая информацию, которая может быть известна только владельцу.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ claim_form.proof.id_for_label }}">Доказательство владения</label>
+                        {{ claim_form.proof }}
+                        <small class="form-text text-muted">Укажите доказательства, подтверждающие, что предмет принадлежит вам (например, уникальные особенности, серийный номер, фото предмета и т.д.).</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ claim_form.contact_info.id_for_label }}">Контактная информация</label>
+                        {{ claim_form.contact_info }}
+                        <small class="form-text text-muted">Укажите, как с вами можно связаться (телефон, email и т.д.).</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">Отправить претензию</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

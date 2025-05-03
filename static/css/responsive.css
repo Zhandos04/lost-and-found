@@ -1,0 +1,220 @@
+/* Responsive CSS */
+
+/* Extra small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+    .jumbotron {
+        padding: 2rem 1rem;
+    }
+    
+    .jumbotron .display-4 {
+        font-size: 1.8rem;
+    }
+    
+    .jumbotron .lead {
+        font-size: 1rem;
+    }
+    
+    .card-img-top {
+        height: 140px;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.5rem;
+        border-radius: 0.25rem !important;
+    }
+    
+    .col-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+    }
+    
+    h3 {
+        font-size: 1.4rem;
+    }
+    
+    footer h5 {
+        margin-top: 1.5rem;
+    }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .jumbotron .display-4 {
+        font-size: 2.2rem;
+    }
+    
+    .card-img-top {
+        height: 160px;
+    }
+    
+    .col-md-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    
+    footer h5 {
+        margin-top: 1.5rem;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .jumbotron .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    .card-deck .card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .col-md-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    
+    .card-img-top {
+        height: 180px;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    .navbar-expand-lg .navbar-nav .nav-link {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+    
+    .card-img-top {
+        height: 200px;
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px;
+    }
+    
+    .jumbotron {
+        padding: 4rem 2rem;
+    }
+}
+
+/* Custom responsive utilities */
+.d-none-mobile {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .d-none-mobile {
+        display: block;
+    }
+}
+
+.d-none-desktop {
+    display: block;
+}
+
+@media (min-width: 768px) {
+    .d-none-desktop {
+        display: none;
+    }
+}
+
+/* Responsive forms */
+@media (max-width: 767.98px) {
+    .search-form .form-row {
+        flex-direction: column;
+    }
+    
+    .search-form .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Responsive modals */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+}
+
+/* Responsive tables */
+@media (max-width: 767.98px) {
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table th, .table td {
+        min-width: 100px;
+    }
+}
+
+/* Fixes for specific layout issues */
+@media (max-width: 991.98px) {
+    .item-detail-sidebar {
+        margin-top: 2rem;
+    }
+    
+    .navbar .dropdown-menu {
+        border: none;
+        background-color: transparent;
+        box-shadow: none;
+    }
+    
+    .navbar .dropdown-item {
+        color: rgba(255, 255, 255, 0.85);
+    }
+    
+    .navbar .dropdown-item:hover {
+        color: #fff;
+        background-color: transparent;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar, .footer, .btn, .no-print {
+        display: none !important;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    
+    body {
+        font-size: 12pt;
+    }
+    
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+    
+    .card {
+        border: none;
+        box-shadow: none;
+    }
+}

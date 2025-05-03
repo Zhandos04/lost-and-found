@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block title %}Мои объявления{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="mb-4">Мои объявления</h2>
+        
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="lost-tab" data-toggle="tab" href="#lost" role="tab" aria-controls="lost" aria-selected="true">
+                    Потерянные ({{ lost_items.count }})
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="found-tab" data-toggle="tab" href="#found" role="tab" aria-controls="found" aria-selected="false">
+                    Найденные ({{ found_items.count }})
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="claimed-tab" data-toggle="tab" href="#claimed" role="tab" aria-controls="claimed" aria-selected="false">
+                    Возвращенные ({{ claimed_items.count }})
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="claims-tab" data-toggle="tab" href="#claims" role="tab" aria-controls="claims" aria-selected="false">
+                    Мои претензии ({{ claims.count }})
+                </a>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="myTabContent">
+            <!-- Потерянные предметы -->
+            <div class="tab-pane fade show active" id="lost" role="tabpanel" aria-labelledby="lost-tab">
+                <div class="row">
+                    {% for item in lost_items %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+                                {% else %}
+                                    <div class="card-img-top bg-light text-center py-5">
+                                        <i class="fas fa-search fa-3x text-secondary"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <span class="badge badge-danger mb-2">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                    <h5 class="card-title">{{ item.title }}</h5>
+                                    <p class="card-text small text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
+                                        <i class="fas fa-calendar-alt"></i> {{ item.date_lost_found|date:"d.m.Y" }}
+                                    </p>
+                                    
+                                    {% if item.claims.exists %}
+                                        <p class="text-warning mt-2">
+                                            <i class="fas fa-exclamation-circle"></i> 
+                                            Претензий: {{ item.claims.count }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <div class="btn-group btn-group-sm d-flex">
+                                        <a href="{% url 'item-detail' item.id %}" class="btn btn-outline-primary">Просмотр</a>
+                                        <a href="{% url 'item-update' item.id %}" class="btn btn-outline-secondary">Изменить</a>
+                                        {% if item.claims.exists %}
+                                            <a href="{% url 'manage-claims' item.id %}" class="btn btn-outline-warning">Претензии</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                У вас нет объявлений о потерянных предметах.
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Найденные предметы -->
+            <div class="tab-pane fade" id="found" role="tabpanel" aria-labelledby="found-tab">
+                <div class="row">
+                    {% for item in found_items %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+                                {% else %}
+                                    <div class="card-img-top bg-light text-center py-5">
+                                        <i class="fas fa-box-open fa-3x text-secondary"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <span class="badge badge-success mb-2">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                    <h5 class="card-title">{{ item.title }}</h5>
+                                    <p class="card-text small text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
+                                        <i class="fas fa-calendar-alt"></i> {{ item.date_lost_found|date:"d.m.Y" }}
+                                    </p>
+                                    
+                                    {% if item.claims.exists %}
+                                        <p class="text-warning mt-2">
+                                            <i class="fas fa-exclamation-circle"></i> 
+                                            Претензий: {{ item.claims.count }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <div class="btn-group btn-group-sm d-flex">
+                                        <a href="{% url 'item-detail' item.id %}" class="btn btn-outline-primary">Просмотр</a>
+                                        <a href="{% url 'item-update' item.id %}" class="btn btn-outline-secondary">Изменить</a>
+                                        {% if item.claims.exists %}
+                                            <a href="{% url 'manage-claims' item.id %}" class="btn btn-outline-warning">Претензии</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                У вас нет объявлений о найденных предметах.
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Возвращенные предметы -->
+            <div class="tab-pane fade" id="claimed" role="tabpanel" aria-labelledby="claimed-tab">
+                <div class="row">
+                    {% for item in claimed_items %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
+                                {% else %}
+                                    <div class="card-img-top bg-light text-center py-5">
+                                        <i class="fas fa-check-circle fa-3x text-secondary"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <span class="badge {% if item.status == 'claimed' %}badge-warning{% else %}badge-info{% endif %} mb-2">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                    <h5 class="card-title">{{ item.title }}</h5>
+                                    <p class="card-text small text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
+                                        <i class="fas fa-calendar-alt"></i> {{ item.date_lost_found|date:"d.m.Y" }}
+                                    </p>
+                                    
+                                    {% if item.claims.filter.exists %}
+                                        <p class="text-success mt-2">
+                                            <i class="fas fa-check-circle"></i> 
+                                            Претензия одобрена
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <a href="{% url 'item-detail' item.id %}" class="btn btn-sm btn-outline-primary btn-block">Просмотр</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                У вас нет возвращенных предметов.
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Мои претензии -->
+            <div class="tab-pane fade" id="claims" role="tabpanel" aria-labelledby="claims-tab">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Предмет</th>
+                                <th>Дата претензии</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for claim in claims %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'item-detail' claim.item.id %}">{{ claim.item.title }}</a>
+                                    </td>
+                                    <td>{{ claim.date_claimed|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge {% if claim.status == 'pending' %}badge-warning{% elif claim.status == 'approved' %}badge-success{% else %}badge-danger{% endif %}">
+                                            {{ claim.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'item-detail' claim.item.id %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">У вас нет претензий на предметы.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{% url 'item-create' %}" class="btn btn-primary">
+        <i class="fas fa-plus mr-1"></i> Создать новое объявление
+    </a>
+</div>
+{% endblock %}
