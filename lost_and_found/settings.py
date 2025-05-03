@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from storages.backends.s3boto3 import S3Boto3Storage
 
 load_dotenv()
 
@@ -104,9 +105,39 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Всегда используем локальное хранилище для статических файлов
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Media files - AWS S3 для медиа или локальное хранилище
+if all([
+    os.environ.get('AWS_ACCESS_KEY_ID'),
+    os.environ.get('AWS_SECRET_ACCESS_KEY'),
+    os.environ.get('AWS_STORAGE_BUCKET_NAME'),
+    os.environ.get('AWS_S3_REGION_NAME')
+]):
+    # AWS S3 базовые настройки
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    
+    # AWS S3 только для медиа файлов
+    MEDIA_LOCATION = 'media'
+    MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/{MEDIA_LOCATION}/'
+    
+    # Используем класс хранилища для медиа
+    class MediaStorage(S3Boto3Storage):
+        location = MEDIA_LOCATION
+        file_overwrite = False
+    
+    DEFAULT_FILE_STORAGE = 'core.storages.MediaStorage'
+else:
+    # Локальное хранение медиа, если AWS не настроен
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -118,25 +149,5 @@ LOGIN_URL = 'login'
 # Crispy Forms
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-# AWS S3 configuration for file storage
-if not DEBUG:
-    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-    
-    # s3 static settings
-    STATIC_LOCATION = 'static'
-    STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/{STATIC_LOCATION}/'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    
-    # s3 media settings
-    MEDIA_LOCATION = 'media'
-    MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/{MEDIA_LOCATION}/'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# AI Service Configuration
-VISION_AI_API_KEY = os.environ.get('VISION_AI_API_KEY')
+# TensorFlow Model Configuration
+TENSORFLOW_MODEL = os.environ.get('TENSORFLOW_MODEL', 'MobileNetV2')
