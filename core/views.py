@@ -156,7 +156,7 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         else:
             print("[VIEW] Нет изображения для анализа")
         
-        messages.success(self.request, 'Объявление успешно создано!')
+        messages.success(self.request, 'Объявление успешно обновлено!')
         return response
     
     def test_func(self):

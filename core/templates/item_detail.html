@@ -1,98 +1,350 @@
 {% extends 'base.html' %}
 {% block title %}{{ item.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .item-image {
+        border-radius: 8px;
+        width: 100%;
+        height: auto;
+        max-height: 500px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+        cursor: zoom-in;
+    }
+    
+    .item-image:hover {
+        transform: scale(1.02);
+    }
+    
+    .status-badge-large {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .item-details-list {
+        padding-left: 0;
+        list-style: none;
+    }
+    
+    .item-details-list li {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(0,0,0,.05);
+    }
+    
+    .item-details-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .item-details-list i {
+        width: 25px;
+        color: var(--primary);
+    }
+    
+    .item-info-box {
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .ai-description-box {
+        background-color: #f8f9fa;
+        border-left: 4px solid var(--primary);
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+    }
+    
+    .action-btn {
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .claim-btn {
+        border-radius: 30px;
+        padding: 10px 20px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 15px;
+    }
+    
+    .author-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .modal-image {
+        max-height: 80vh;
+        margin: 0 auto;
+    }
+    
+    .share-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .share-buttons a {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f1f1f1;
+        color: #666;
+        transition: all 0.3s ease;
+    }
+    
+    .share-buttons a:hover {
+        background-color: var(--primary);
+        color: white;
+    }
+    
+    .description-section {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .help-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 {% if item.user == user and not item.is_moderated %}
-<div class="alert alert-warning mb-4">
-    <i class="fas fa-exclamation-triangle mr-2"></i> 
-    <strong>Внимание!</strong> Ваше объявление ожидает проверки модератором. До проверки оно видно только вам.
+<div class="alert alert-warning mb-4 animate__animated animate__fadeIn">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle mr-3 fa-2x"></i> 
+        <div>
+            <strong>Внимание!</strong> Ваше объявление ожидает проверки модератором. До проверки оно видно только вам.
+        </div>
+    </div>
 </div>
 {% endif %}
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="badge {% if item.status == 'lost' %}badge-danger{% elif item.status == 'found' %}badge-success{% elif item.status == 'claimed' %}badge-warning{% else %}badge-info{% endif %} p-2">
-                    {{ item.get_status_display }}
-                </span>
-                <small class="text-muted">Опубликовано {{ item.date_posted|date:"d.m.Y H:i" }}</small>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left mr-2"></i> Назад
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeIn">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
+        <div>
+            <span class="badge badge-pill status-badge-large {% if item.status == 'lost' %}badge-danger{% elif item.status == 'found' %}badge-success{% elif item.status == 'claimed' %}badge-warning{% else %}badge-info{% endif %}">
+                <i class="fas {% if item.status == 'lost' %}fa-search{% elif item.status == 'found' %}fa-box-open{% elif item.status == 'claimed' %}fa-handshake{% else %}fa-check-circle{% endif %} mr-2"></i>
+                {{ item.get_status_display }}
+            </span>
+        </div>
+        <small class="text-muted">
+            <i class="far fa-calendar-alt mr-1"></i> Опубликовано {{ item.date_posted|date:"d.m.Y H:i" }}
+        </small>
+    </div>
+    
+    <div class="row no-gutters">
+        {% if item.image %}
+        <div class="col-md-6">
+            <div class="p-3">
+                <img src="{{ item.image.url }}" class="item-image img-fluid" alt="{{ item.title }}" id="itemImage">
             </div>
-            {% if item.image %}
-                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
-            {% endif %}
-            <div class="card-body">
-                <h1 class="card-title">{{ item.title }}</h1>
-                <p class="card-text">{{ item.description }}</p>
+        </div>
+        <div class="col-md-6">
+        {% else %}
+        <div class="col-md-12">
+        {% endif %}
+            <div class="card-body {% if item.image %}pl-md-4{% endif %}">
+                <h1 class="card-title mb-3">{{ item.title }}</h1>
+                
+                <div class="item-info-box bg-light mb-4">
+                    <h5 class="mb-3"><i class="fas fa-info-circle mr-2"></i> Основная информация</h5>
+                    <ul class="item-details-list">
+                        <li>
+                            <i class="fas fa-tag mr-2"></i> <strong>Категория:</strong> 
+                            <span class="badge badge-light">{{ item.category.name }}</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-calendar-day mr-2"></i> <strong>Дата потери/находки:</strong> 
+                            {{ item.date_lost_found|date:"d.m.Y" }}
+                        </li>
+                        <li>
+                            <i class="fas fa-map-marker-alt mr-2"></i> <strong>Место:</strong> 
+                            {{ item.location }}
+                        </li>
+                        <li>
+                            <i class="fas fa-user mr-2"></i> <strong>Разместил:</strong> 
+                            {{ item.user.username }}
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="description-section">
+                    <h5 class="mb-3"><i class="fas fa-align-left mr-2"></i> Описание</h5>
+                    <p class="card-text">{{ item.description }}</p>
+                </div>
                 
                 {% if item.ai_description %}
-                    <h5>AI-описание предмета:</h5>
-                    <p class="card-text bg-light p-3 rounded">{{ item.ai_description }}</p>
+                <div class="ai-description-box">
+                    <h5><i class="fas fa-robot mr-2"></i> AI-описание предмета:</h5>
+                    <p class="card-text mb-0">{{ item.ai_description }}</p>
+                </div>
                 {% endif %}
                 
-                <hr>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Детали:</h5>
-                        <ul class="list-unstyled">
-                            <li><strong>Категория:</strong> {{ item.category.name }}</li>
-                            <li><strong>Дата потери/находки:</strong> {{ item.date_lost_found|date:"d.m.Y" }}</li>
-                            <li><strong>Место:</strong> {{ item.location }}</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Контакт:</h5>
+                <div class="mt-4">
+                    <h5 class="mb-3"><i class="fas fa-address-card mr-2"></i> Контактная информация</h5>
+                    <div class="p-3 border rounded">
                         {% if user.is_authenticated %}
-                            <p>{{ item.contact_info }}</p>
+                            <p class="mb-0">{{ item.contact_info }}</p>
                         {% else %}
-                            <p><a href="{% url 'login' %}">Войдите</a>, чтобы увидеть контактную информацию.</p>
+                            <p class="mb-0"><a href="{% url 'login' %}">Войдите</a>, чтобы увидеть контактную информацию.</p>
                         {% endif %}
                     </div>
                 </div>
+                
+                <div class="share-buttons">
+                    <span class="mr-2 text-muted">Поделиться:</span>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" title="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ item.title }}" target="_blank" title="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://t.me/share/url?url={{ request.build_absolute_uri }}&text={{ item.title }}" target="_blank" title="Telegram">
+                        <i class="fab fa-telegram-plane"></i>
+                    </a>
+                    <a href="https://api.whatsapp.com/send?text={{ item.title }} {{ request.build_absolute_uri }}" target="_blank" title="WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
             </div>
-            <div class="card-footer bg-white">
-                {% if user.is_authenticated and user == item.user %}
-                    <div class="btn-group">
-                        <a href="{% url 'item-update' item.pk %}" class="btn btn-outline-primary">Редактировать</a>
-                        <a href="{% url 'item-delete' item.pk %}" class="btn btn-outline-danger">Удалить</a>
-                        {% if item.claims.exists %}
-                            <a href="{% url 'manage-claims' item.pk %}" class="btn btn-outline-warning">Управление претензиями ({{ item.claims.count }})</a>
-                        {% endif %}
-                    </div>
-                {% elif user.is_authenticated and item.status == 'found' %}
-                    {% if not has_claimed %}
-                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#claimModal">
-                            Это моя вещь
-                        </button>
-                    {% else %}
-                        <div class="alert alert-info mb-0">
-                            Вы уже отправили претензию на этот предмет.
-                        </div>
-                    {% endif %}
+        </div>
+    </div>
+    
+    <div class="card-footer bg-white p-3">
+        {% if user.is_authenticated and user == item.user %}
+            <div class="d-flex flex-wrap">
+                <a href="{% url 'item-update' item.pk %}" class="btn btn-outline-primary action-btn">
+                    <i class="fas fa-edit mr-1"></i> Редактировать
+                </a>
+                <a href="{% url 'item-delete' item.pk %}" class="btn btn-outline-danger action-btn">
+                    <i class="fas fa-trash-alt mr-1"></i> Удалить
+                </a>
+                {% if item.claims.exists %}
+                    <a href="{% url 'manage-claims' item.pk %}" class="btn btn-outline-warning action-btn">
+                        <i class="fas fa-clipboard-list mr-1"></i> Управление претензиями ({{ item.claims.count }})
+                    </a>
+                {% endif %}
+            </div>
+        {% elif user.is_authenticated and item.status == 'found' %}
+            {% if not has_claimed %}
+                <button type="button" class="btn btn-success claim-btn" data-toggle="modal" data-target="#claimModal">
+                    <i class="fas fa-hand-paper mr-2"></i> Это моя вещь
+                </button>
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle mr-2"></i> Вы уже отправили претензию на этот предмет.
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        {% if user.is_authenticated and user == item.user and item.claims.exists %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-bell mr-2"></i> Управление претензиями</h5>
+            </div>
+            <div class="card-body">
+                <p>На данный предмет подано <strong>{{ item.claims.count }}</strong> претензий.</p>
+                <a href="{% url 'manage-claims' item.pk %}" class="btn btn-warning">
+                    <i class="fas fa-clipboard-list mr-1"></i> Просмотреть претензии
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-info-circle mr-2"></i> Полезная информация</h5>
+            </div>
+            <div class="card-body">
+                {% if item.status == 'lost' %}
+                <div class="help-section">
+                    <h6><i class="fas fa-lightbulb mr-2"></i> Советы по поиску потерянных вещей:</h6>
+                    <ul>
+                        <li>Вернитесь по своим шагам и тщательно проверьте все места, где вы были.</li>
+                        <li>Свяжитесь с бюро находок в общественных местах, где вы могли потерять предмет.</li>
+                        <li>Следите за новыми объявлениями в разделе "Найдено".</li>
+                        <li>Размещайте объявления в социальных сетях и местных группах.</li>
+                    </ul>
+                </div>
+                {% elif item.status == 'found' %}
+                <div class="help-section">
+                    <h6><i class="fas fa-lightbulb mr-2"></i> Что делать с найденной вещью:</h6>
+                    <ul>
+                        <li>Если на предмете есть контактная информация, попробуйте связаться с владельцем.</li>
+                        <li>Передайте найденную вещь в бюро находок, если таковое имеется поблизости.</li>
+                        <li>Следите за новыми претензиями на ваше объявление.</li>
+                        <li>Если владелец не найдется в течение длительного времени, уточните законодательство вашего региона.</li>
+                    </ul>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
     
     <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Автор объявления</h5>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user mr-2"></i> Автор объявления</h5>
             </div>
             <div class="card-body">
-                <h6>{{ item.user.username }}</h6>
-                <p class="text-muted small">На сайте с {{ item.user.date_joined|date:"d.m.Y" }}</p>
+                <div class="author-info">
+                    <div class="author-avatar">
+                        <i class="fas fa-user fa-2x text-secondary"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1">{{ item.user.username }}</h6>
+                        <p class="text-muted small mb-0">На сайте с {{ item.user.date_joined|date:"d.m.Y" }}</p>
+                    </div>
+                </div>
+                
                 {% if user.is_authenticated and user != item.user %}
                     <hr>
-                    <h6>Что делать дальше?</h6>
-                    <p class="small">
-                        {% if item.status == 'lost' %}
-                            Если вы нашли этот предмет, свяжитесь с автором объявления, используя указанную контактную информацию.
-                        {% else %}
-                            Если вы считаете, что эта вещь принадлежит вам, нажмите кнопку "Это моя вещь" и предоставьте доказательства владения.
-                        {% endif %}
-                    </p>
+                    <h6 class="mb-2"><i class="fas fa-question-circle mr-2"></i> Что делать дальше?</h6>
+                    <div class="bg-light p-3 rounded">
+                        <p class="small mb-0">
+                            {% if item.status == 'lost' %}
+                                Если вы нашли этот предмет, свяжитесь с автором объявления, используя указанную контактную информацию.
+                            {% else %}
+                                Если вы считаете, что эта вещь принадлежит вам, нажмите кнопку "Это моя вещь" и предоставьте доказательства владения.
+                            {% endif %}
+                        </p>
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -102,41 +354,141 @@
 {% if user.is_authenticated and item.status == 'found' and not has_claimed %}
 <!-- Модальное окно для формы претензии -->
 <div class="modal fade" id="claimModal" tabindex="-1" aria-labelledby="claimModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="claimModalLabel">Претензия на предмет "{{ item.title }}"</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="claimModalLabel">
+                    <i class="fas fa-hand-paper mr-2"></i> Претензия на предмет "{{ item.title }}"
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="{% url 'create-claim' item.pk %}">
+            <form method="POST" action="{% url 'create-claim' item.pk %}" id="claimForm">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <p>Чтобы подтвердить, что этот предмет принадлежит вам, пожалуйста, предоставьте следующую информацию:</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i> Чтобы подтвердить, что этот предмет принадлежит вам, пожалуйста, предоставьте подробную информацию.
+                    </div>
+                    
                     <div class="form-group">
-                        <label for="{{ claim_form.description.id_for_label }}">Описание предмета</label>
+                        <label for="{{ claim_form.description.id_for_label }}">
+                            <i class="fas fa-align-left mr-1"></i> Описание предмета
+                        </label>
                         {{ claim_form.description }}
                         <small class="form-text text-muted">Опишите предмет подробно, включая информацию, которая может быть известна только владельцу.</small>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="{{ claim_form.proof.id_for_label }}">Доказательство владения</label>
+                        <label for="{{ claim_form.proof.id_for_label }}">
+                            <i class="fas fa-check-double mr-1"></i> Доказательство владения
+                        </label>
                         {{ claim_form.proof }}
                         <small class="form-text text-muted">Укажите доказательства, подтверждающие, что предмет принадлежит вам (например, уникальные особенности, серийный номер, фото предмета и т.д.).</small>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="{{ claim_form.contact_info.id_for_label }}">Контактная информация</label>
+                        <label for="{{ claim_form.contact_info.id_for_label }}">
+                            <i class="fas fa-address-card mr-1"></i> Контактная информация
+                        </label>
                         {{ claim_form.contact_info }}
                         <small class="form-text text-muted">Укажите, как с вами можно связаться (телефон, email и т.д.).</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-success">Отправить претензию</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-paper-plane mr-1"></i> Отправить претензию
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 {% endif %}
+
+<!-- Модальное окно для просмотра изображения -->
+{% if item.image %}
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Просмотр изображения - {{ item.title }}</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0 text-center bg-light">
+                <img src="{{ item.image.url }}" class="modal-image img-fluid" alt="{{ item.title }}">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        // Увеличение изображения при клике
+        $('#itemImage').click(function() {
+            $('#imageModal').modal('show');
+        });
+        
+        // Валидация формы претензии
+        $('#claimForm').submit(function(event) {
+            let isValid = true;
+            const description = $('#{{ claim_form.description.id_for_label }}');
+            const proof = $('#{{ claim_form.proof.id_for_label }}');
+            const contactInfo = $('#{{ claim_form.contact_info.id_for_label }}');
+            
+            // Очистка предыдущих ошибок
+            $('.invalid-feedback').remove();
+            $('.is-invalid').removeClass('is-invalid');
+            
+            if (description.val().trim().length < 10) {
+                isValid = false;
+                description.addClass('is-invalid');
+                description.after('<div class="invalid-feedback">Пожалуйста, введите подробное описание (минимум 10 символов)</div>');
+            }
+            
+            if (proof.val().trim().length < 10) {
+                isValid = false;
+                proof.addClass('is-invalid');
+                proof.after('<div class="invalid-feedback">Пожалуйста, укажите доказательства владения (минимум 10 символов)</div>');
+            }
+            
+            if (contactInfo.val().trim().length < 5) {
+                isValid = false;
+                contactInfo.addClass('is-invalid');
+                contactInfo.after('<div class="invalid-feedback">Пожалуйста, укажите контактную информацию (минимум 5 символов)</div>');
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+        
+        // Анимации при прокрутке
+        function animateOnScroll() {
+            $('.description-section, .ai-description-box, .help-section').each(function() {
+                const elemPosition = $(this).offset().top;
+                const scrollPosition = $(window).scrollTop();
+                const windowHeight = $(window).height();
+                
+                if (scrollPosition + windowHeight - 100 > elemPosition) {
+                    $(this).addClass('animate__animated animate__fadeIn');
+                }
+            });
+        }
+        
+        $(window).scroll(animateOnScroll);
+        animateOnScroll(); // Запуск при загрузке страницы
+    });
+</script>
 {% endblock %}

@@ -1,96 +1,174 @@
 {% extends 'base.html' %}
 {% block title %}Главная{% endblock %}
 
+{% block extra_css %}
+<style>
+    .category-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        text-align: center;
+        border-radius: 50%;
+        background: var(--primary-light);
+        color: var(--primary);
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover .category-icon {
+        background: var(--primary);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .stats-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: white;
+    }
+    
+    .animate-up {
+        transition: all 0.3s ease;
+    }
+    
+    .animate-up:hover {
+        transform: translateY(-10px);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="jumbotron p-4 p-md-5 text-white rounded bg-primary">
-    <div class="col-md-8 px-0">
-        <h1 class="display-4 font-weight-bold">Потеряли или нашли что-то?</h1>
-        <p class="lead my-3">Наш сервис поможет вам найти потерянные вещи или вернуть найденные предметы их владельцам.</p>
-        <p class="lead mb-0">
-            <a href="{% url 'item-create' %}" class="btn btn-lg btn-light font-weight-bold">Подать объявление</a>
-        </p>
+<div class="jumbotron p-4 p-md-5 text-white rounded animate__animated animate__fadeIn">
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <h1 class="display-4 font-weight-bold">Потеряли или нашли что-то?</h1>
+            <p class="lead my-3">Наш сервис поможет вам найти потерянные вещи или вернуть найденные предметы их владельцам. Присоединяйтесь к сообществу, которое помогает людям встретиться со своими вещами!</p>
+            <div class="mt-4">
+                <a href="{% url 'item-create' %}" class="btn btn-lg btn-light font-weight-bold mr-2">
+                    <i class="fas fa-plus mr-2"></i> Подать объявление
+                </a>
+                <a href="{% url 'search' %}" class="btn btn-lg btn-outline-light font-weight-bold">
+                    <i class="fas fa-search mr-2"></i> Найти предмет
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card text-white bg-danger mb-3">
+<div class="row mb-5 animate__animated animate__fadeInUp">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-white bg-danger border-0 stats-card animate-up">
             <div class="card-body text-center">
-                <h2 class="card-title"><i class="fas fa-search"></i> {{ lost_count }}</h2>
+                <i class="fas fa-search stats-icon"></i>
+                <h2 class="card-title counter">{{ lost_count }}</h2>
                 <p class="card-text">Потерянных вещей</p>
                 <a href="{% url 'item-list-filtered' 'lost' %}" class="btn btn-light">Посмотреть все</a>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-success mb-3">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-white bg-success border-0 stats-card animate-up">
             <div class="card-body text-center">
-                <h2 class="card-title"><i class="fas fa-box-open"></i> {{ found_count }}</h2>
+                <i class="fas fa-box-open stats-icon"></i>
+                <h2 class="card-title counter">{{ found_count }}</h2>
                 <p class="card-text">Найденных вещей</p>
                 <a href="{% url 'item-list-filtered' 'found' %}" class="btn btn-light">Посмотреть все</a>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-info mb-3">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-white bg-info border-0 stats-card animate-up">
             <div class="card-body text-center">
-                <h2 class="card-title"><i class="fas fa-undo-alt"></i> {{ returned_count }}</h2>
+                <i class="fas fa-undo-alt stats-icon"></i>
+                <h2 class="card-title counter">{{ returned_count }}</h2>
                 <p class="card-text">Возвращено владельцам</p>
+                <a href="#" class="btn btn-light">Истории успеха</a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-6">
-        <h3>Категории</h3>
-        <div class="row">
-            {% for category in categories %}
-                <div class="col-6 col-md-4 mb-3">
-                    <a href="{% url 'search' %}?category={{ category.id }}" class="text-decoration-none">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-tag fa-2x mb-2 text-primary"></i>
-                                <h5 class="card-title">{{ category.name }}</h5>
-                            </div>
+<div class="row mb-5">
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-tags mr-2"></i> Категории</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for category in categories %}
+                        <div class="col-6 col-md-4 mb-4">
+                            <a href="{% url 'search' %}?category={{ category.id }}" class="text-decoration-none">
+                                <div class="category-card h-100">
+                                    <div class="text-center">
+                                        <div class="category-icon">
+                                            <i class="fas fa-{% if category.name == 'Электроника' %}mobile-alt{% elif category.name == 'Документы' %}id-card{% elif category.name == 'Ключи' %}key{% elif category.name == 'Одежда' %}tshirt{% elif category.name == 'Сумки и рюкзаки' %}briefcase{% elif category.name == 'Кошельки' %}wallet{% elif category.name == 'Украшения' %}gem{% elif category.name == 'Транспорт' %}car{% else %}box{% endif %}"></i>
+                                        </div>
+                                        <h5 class="category-title">{{ category.name }}</h5>
+                                    </div>
+                                </div>
+                            </a>
                         </div>
-                    </a>
+                    {% endfor %}
                 </div>
-            {% endfor %}
+            </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <h3>Поиск</h3>
-        <div class="card">
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-filter mr-2"></i> Поиск</h3>
+            </div>
             <div class="card-body">
-                <form method="GET" action="{% url 'search' %}">
+                <form method="GET" action="{% url 'search' %}" class="search-form">
                     <div class="form-group">
-                        {{ search_form.search_query.label_tag }}
-                        {{ search_form.search_query }}
+                        <label for="{{ search_form.search_query.id_for_label }}">Что вы ищете?</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                            </div>
+                            {{ search_form.search_query }}
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            {{ search_form.category.label_tag }}
+                            <label for="{{ search_form.category.id_for_label }}">
+                                <i class="fas fa-tag mr-1"></i> Категория
+                            </label>
                             {{ search_form.category }}
                         </div>
                         <div class="form-group col-md-6">
-                            {{ search_form.status.label_tag }}
+                            <label for="{{ search_form.status.id_for_label }}">
+                                <i class="fas fa-info-circle mr-1"></i> Статус
+                            </label>
                             {{ search_form.status }}
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Искать</button>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-search mr-2"></i> Искать
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<div class="mt-5">
-    <h3>Последние объявления</h3>
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-clock mr-2"></i> Последние объявления</h2>
+        <a href="{% url 'item-list' %}" class="btn btn-outline-primary">
+            Все объявления <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+    
     <div class="row">
         {% for item in items %}
             <div class="col-md-3 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 shadow-sm animate-up">
                     {% if item.image %}
                         <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}">
                     {% else %}
@@ -99,27 +177,72 @@
                         </div>
                     {% endif %}
                     <div class="card-body">
-                        <span class="badge {% if item.status == 'lost' %}badge-danger{% else %}badge-success{% endif %} mb-2">
-                            {{ item.get_status_display }}
-                        </span>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge {% if item.status == 'lost' %}badge-danger{% else %}badge-success{% endif %}">
+                                {{ item.get_status_display }}
+                            </span>
+                            <small class="text-muted">{{ item.date_lost_found|date:"d.m.Y" }}</small>
+                        </div>
                         <h5 class="card-title">{{ item.title }}</h5>
-                        <p class="card-text small text-muted">
-                            <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
-                            <i class="fas fa-calendar-alt"></i> {{ item.date_lost_found|date:"d.m.Y" }}
+                        <p class="card-text small text-muted mb-0">
+                            <i class="fas fa-map-marker-alt mr-1"></i> {{ item.location }}
                         </p>
                     </div>
                     <div class="card-footer bg-white">
-                        <a href="{% url 'item-detail' item.id %}" class="btn btn-sm btn-outline-primary btn-block">Подробнее</a>
+                        <a href="{% url 'item-detail' item.id %}" class="btn btn-sm btn-outline-primary btn-block">
+                            <i class="fas fa-info-circle mr-1"></i> Подробнее
+                        </a>
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
                 <div class="alert alert-info">
-                    Нет объявлений для отображения.
+                    <i class="fas fa-info-circle mr-2"></i> Нет объявлений для отображения.
                 </div>
             </div>
         {% endfor %}
     </div>
 </div>
+
+<div class="card border-0 shadow-sm mb-5 bg-light">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-md-9">
+                <h3>Помогите сообществу находить потерянные вещи</h3>
+                <p class="mb-md-0">Создайте объявление о находке или пропаже и помогите людям воссоединиться с их вещами. Это просто и занимает всего несколько минут вашего времени!</p>
+            </div>
+            <div class="col-md-3 text-center text-md-right">
+                <a href="{% url 'item-create' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus mr-2"></i> Создать объявление
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Простая анимация счетчиков
+    $(document).ready(function() {
+        $('.counter').each(function() {
+            const $this = $(this);
+            const countTo = parseInt($this.text(), 10);
+            
+            $({ countNum: 0 }).animate({
+                countNum: countTo
+            }, {
+                duration: 2000,
+                easing: 'swing',
+                step: function() {
+                    $this.text(Math.floor(this.countNum));
+                },
+                complete: function() {
+                    $this.text(this.countNum);
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
