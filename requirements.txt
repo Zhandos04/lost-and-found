@@ -10,4 +10,5 @@ python-dotenv==1.0.0
 whitenoise==6.6.0
 djangorestframework==3.14.0
 tensorflow==2.15.0
-numpy==1.26.0
+numpy==1.26.04
+crispy-bootstrap4==2022.1

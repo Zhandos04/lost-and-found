@@ -15,4 +15,8 @@ urlpatterns = [
     path('item/<int:pk>/claims/', views.manage_claims, name='manage-claims'),
     path('claim/<int:claim_id>/approve/', views.approve_claim, name='approve-claim'),
     path('claim/<int:claim_id>/reject/', views.reject_claim, name='reject-claim'),
+    # В список urlpatterns добавьте
+    path('admin-dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    path('admin-dashboard/approve/<int:pk>/', views.approve_item, name='approve-item'),
+    path('admin-dashboard/reject/<int:pk>/', views.reject_item, name='reject-item'),
 ]

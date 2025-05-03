@@ -32,6 +32,7 @@ class Item(models.Model):
     image = models.ImageField(upload_to='items/', verbose_name='Изображение', blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='lost', verbose_name='Статус')
     contact_info = models.CharField(max_length=200, verbose_name='Контактная информация')
+    is_moderated = models.BooleanField(default=False, verbose_name='Проверено модератором')
     
     class Meta:
         verbose_name = 'Предмет'

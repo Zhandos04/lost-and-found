@@ -2,6 +2,13 @@
 {% block title %}{{ item.title }}{% endblock %}
 
 {% block content %}
+{% if item.user == user and not item.is_moderated %}
+<div class="alert alert-warning mb-4">
+    <i class="fas fa-exclamation-triangle mr-2"></i> 
+    <strong>Внимание!</strong> Ваше объявление ожидает проверки модератором. До проверки оно видно только вам.
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-md-8">
         <div class="card mb-4">
@@ -87,31 +94,6 @@
                         {% endif %}
                     </p>
                 {% endif %}
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Похожие объявления</h5>
-            </div>
-            <div class="list-group list-group-flush">
-                {% for related_item in item.category.item_set.all|slice:":5" %}
-                    {% if related_item.id != item.id %}
-                        <a href="{% url 'item-detail' related_item.id %}" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ related_item.title }}</h6>
-                                <span class="badge {% if related_item.status == 'lost' %}badge-danger{% else %}badge-success{% endif %}">
-                                    {{ related_item.get_status_display }}
-                                </span>
-                            </div>
-                            <small class="text-muted">{{ related_item.location }} • {{ related_item.date_lost_found|date:"d.m.Y" }}</small>
-                        </a>
-                    {% endif %}
-                {% empty %}
-                    <div class="list-group-item">
-                        Нет похожих объявлений.
-                    </div>
-                {% endfor %}
             </div>
         </div>
     </div>

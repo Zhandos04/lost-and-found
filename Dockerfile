@@ -12,8 +12,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Копирование requirements.txt
 COPY requirements.txt .
 
-# Установка зависимостей Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Установка зависимостей Python, кроме TensorFlow
+RUN pip install --no-cache-dir $(grep -v "tensorflow" requirements.txt)
+
+# Установка TensorFlow отдельно с увеличенным тайм-аутом
+RUN pip install --no-cache-dir --timeout=600 tensorflow==2.15.0
 
 # Копирование исходного кода проекта
 COPY . .

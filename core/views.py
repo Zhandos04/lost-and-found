@@ -11,6 +11,7 @@ from .models import Item, Category, Claim
 from .forms import ItemForm, ClaimForm, SearchForm
 from .services.ai_service import analyze_image
 from .services.notification_service import send_notification
+from django.contrib.auth.models import User
 
 class HomeView(ListView):
     model = Item
@@ -20,15 +21,32 @@ class HomeView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['lost_count'] = Item.objects.filter(status='lost').count()
-        context['found_count'] = Item.objects.filter(status='found').count()
-        context['returned_count'] = Item.objects.filter(status='returned').count()
+        
+        # Простое отображение счетчиков
+        filter_condition = Q(is_moderated=True)
+        
+        # Если пользователь аутентифицирован, показываем и его неподтвержденные объявления
+        if self.request.user.is_authenticated:
+            filter_condition |= Q(user=self.request.user)
+            
+        context['lost_count'] = Item.objects.filter(status='lost').filter(filter_condition).count()
+        context['found_count'] = Item.objects.filter(status='found').filter(filter_condition).count()
+        context['returned_count'] = Item.objects.filter(status='returned').filter(filter_condition).count()
         context['categories'] = Category.objects.all()
         context['search_form'] = SearchForm()
         return context
     
     def get_queryset(self):
-        return Item.objects.filter(status__in=['lost', 'found']).order_by('-date_posted')
+        queryset = Item.objects.filter(status__in=['lost', 'found'])
+        
+        # Базовая фильтрация - показываем только подтвержденные
+        filter_condition = Q(is_moderated=True)
+        
+        # Если пользователь аутентифицирован, показываем и его неподтвержденные объявления
+        if self.request.user.is_authenticated:
+            filter_condition |= Q(user=self.request.user)
+            
+        return queryset.filter(filter_condition).order_by('-date_posted')
 
 class ItemListView(ListView):
     model = Item
@@ -38,9 +56,22 @@ class ItemListView(ListView):
     
     def get_queryset(self):
         status = self.kwargs.get('status', None)
+        queryset = Item.objects.all()
+        
+        # Базовая фильтрация - показываем только подтвержденные
+        filter_condition = Q(is_moderated=True)
+        
+        # Если пользователь аутентифицирован, показываем и его неподтвержденные объявления
+        if self.request.user.is_authenticated:
+            filter_condition |= Q(user=self.request.user)
+            
+        queryset = queryset.filter(filter_condition)
+        
+        # Фильтр по статусу
         if status and status in ['lost', 'found']:
-            return Item.objects.filter(status=status).order_by('-date_posted')
-        return Item.objects.all().order_by('-date_posted')
+            queryset = queryset.filter(status=status)
+            
+        return queryset.order_by('-date_posted')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -48,6 +79,7 @@ class ItemListView(ListView):
         context['status'] = status
         context['search_form'] = SearchForm()
         return context
+
 
 class ItemDetailView(DetailView):
     model = Item
@@ -73,17 +105,23 @@ class ItemCreateView(LoginRequiredMixin, CreateView):
         # Обработка изображения через AI-сервис, если оно загружено
         if form.instance.image:
             try:
-                # Получаем полный путь к файлу
-                image_path = form.instance.image.path
+                print(f"[VIEW] Начинаем анализ изображения для объявления")
                 
-                # Выполняем анализ с использованием TensorFlow
-                ai_description = analyze_image(image_path)
+                # Передаем объект ImageField напрямую в функцию анализа
+                ai_description = analyze_image(form.instance.image)
+                print(f"[VIEW] Получено AI-описание: {ai_description[:100]}...")
                 
                 # Сохраняем полученное описание
                 form.instance.ai_description = ai_description
+                print(f"[VIEW] Сохраняем AI-описание в объект")
                 form.instance.save()
+                print(f"[VIEW] Объект сохранен с AI-описанием")
             except Exception as e:
-                print(f"Ошибка в AI анализе изображения: {str(e)}")
+                print(f"[VIEW] ОШИБКА в AI анализе изображения: {str(e)}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print("[VIEW] Нет изображения для анализа")
         
         messages.success(self.request, 'Объявление успешно создано!')
         return response
@@ -100,17 +138,23 @@ class ItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         # Обработка изображения через AI-сервис, если оно загружено
         if form.instance.image:
             try:
-                # Получаем полный путь к файлу
-                image_path = form.instance.image.path
+                print(f"[VIEW] Начинаем анализ изображения для объявления")
                 
-                # Выполняем анализ с использованием TensorFlow
-                ai_description = analyze_image(image_path)
+                # Передаем объект ImageField напрямую в функцию анализа
+                ai_description = analyze_image(form.instance.image)
+                print(f"[VIEW] Получено AI-описание: {ai_description[:100]}...")
                 
                 # Сохраняем полученное описание
                 form.instance.ai_description = ai_description
+                print(f"[VIEW] Сохраняем AI-описание в объект")
                 form.instance.save()
+                print(f"[VIEW] Объект сохранен с AI-описанием")
             except Exception as e:
-                print(f"Ошибка в AI анализе изображения: {str(e)}")
+                print(f"[VIEW] ОШИБКА в AI анализе изображения: {str(e)}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print("[VIEW] Нет изображения для анализа")
         
         messages.success(self.request, 'Объявление успешно создано!')
         return response
@@ -167,7 +211,15 @@ def create_claim(request, pk):
 
 def search_items(request):
     form = SearchForm(request.GET)
-    items = Item.objects.all().order_by('-date_posted')
+    
+    # Базовая фильтрация - показываем только подтвержденные
+    filter_condition = Q(is_moderated=True)
+    
+    # Если пользователь аутентифицирован, показываем и его неподтвержденные объявления
+    if request.user.is_authenticated:
+        filter_condition |= Q(user=request.user)
+        
+    items = Item.objects.filter(filter_condition).order_by('-date_posted')
     
     if form.is_valid():
         search_query = form.cleaned_data.get('search_query')
@@ -283,3 +335,76 @@ def reject_claim(request, claim_id):
     
     messages.success(request, 'Претензия отклонена.')
     return redirect('manage-claims', pk=item.pk)
+
+@login_required
+def admin_dashboard(request):
+    # Проверяем, имеет ли пользователь права администратора
+    if not request.user.is_staff:
+        messages.error(request, 'У вас нет прав для доступа к этой странице.')
+        return redirect('home')
+    
+    # Получаем неподтвержденные объявления
+    unmoderated_items = Item.objects.filter(is_moderated=False).order_by('-date_posted')
+    
+    # Получаем статистику
+    all_items_count = Item.objects.count()
+    lost_items_count = Item.objects.filter(status='lost').count()
+    found_items_count = Item.objects.filter(status='found').count()
+    returned_items_count = Item.objects.filter(status='returned').count()
+    users_count = User.objects.count()
+    claims_count = Claim.objects.count()
+    
+    context = {
+        'unmoderated_items': unmoderated_items,
+        'all_items_count': all_items_count,
+        'lost_items_count': lost_items_count,
+        'found_items_count': found_items_count,
+        'returned_items_count': returned_items_count,
+        'users_count': users_count,
+        'claims_count': claims_count,
+    }
+    
+    return render(request, 'admin_dashboard.html', context)
+
+@login_required
+def approve_item(request, pk):
+    # Проверяем, имеет ли пользователь права администратора
+    if not request.user.is_staff:
+        messages.error(request, 'У вас нет прав для доступа к этой странице.')
+        return redirect('home')
+    
+    item = get_object_or_404(Item, pk=pk)
+    item.is_moderated = True
+    item.save()
+    
+    # Отправляем уведомление владельцу объявления
+    send_notification(
+        user=item.user,
+        subject='Ваше объявление одобрено',
+        message=f'Ваше объявление "{item.title}" было проверено и одобрено модератором.'
+    )
+    
+    messages.success(request, f'Объявление "{item.title}" успешно одобрено.')
+    return redirect('admin-dashboard')
+
+@login_required
+def reject_item(request, pk):
+    # Проверяем, имеет ли пользователь права администратора
+    if not request.user.is_staff:
+        messages.error(request, 'У вас нет прав для доступа к этой странице.')
+        return redirect('home')
+    
+    item = get_object_or_404(Item, pk=pk)
+    
+    # Здесь мы можем выбрать, удалять ли объявление или оставлять неподтвержденным
+    # В данном примере просто отмечаем, что оно не прошло модерацию
+    
+    # Отправляем уведомление владельцу объявления
+    send_notification(
+        user=item.user,
+        subject='Ваше объявление отклонено',
+        message=f'Ваше объявление "{item.title}" было проверено и отклонено модератором.'
+    )
+    
+    messages.warning(request, f'Объявление "{item.title}" было отклонено.')
+    return redirect('admin-dashboard')

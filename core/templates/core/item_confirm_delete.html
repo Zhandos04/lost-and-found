@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Удаление объявления{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3 class="mb-0">Подтверждение удаления</h3>
+            </div>
+            <div class="card-body">
+                <p>Вы уверены, что хотите удалить объявление "{{ object.title }}"?</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash mr-1"></i> Да, удалить
+                    </button>
+                    <a href="{% url 'item-detail' object.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times mr-1"></i> Отмена
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

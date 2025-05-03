@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     
     # Сторонние приложения
     'crispy_forms',
+    'crispy_bootstrap4',
     'storages',
     'rest_framework',
     
@@ -34,6 +35,9 @@ INSTALLED_APPS = [
     'core',
     'users',
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -121,7 +125,6 @@ if all([
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
     AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
     AWS_S3_FILE_OVERWRITE = False
-    AWS_DEFAULT_ACL = 'public-read'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     
     # AWS S3 только для медиа файлов

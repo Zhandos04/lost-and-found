@@ -23,43 +23,80 @@ def analyze_image(image_path):
     Анализирует изображение с помощью TensorFlow и предобученной модели MobileNetV2
     
     Args:
-        image_path: Путь к файлу изображения
+        image_path: Путь к файлу изображения или объект изображения
         
     Returns:
         str: Описание изображения на основе AI
     """
     try:
-        # Загружаем модель
-        model = load_model()
+        print(f"[AI] Начинаем анализ изображения")
         
-        # Открываем и предобрабатываем изображение
-        img = Image.open(image_path)
+        # Загружаем модель
+        print("[AI] Загружаем модель TensorFlow...")
+        model = load_model()
+        print("[AI] Модель загружена успешно")
+        
+        # Получаем данные изображения
+        print("[AI] Получаем данные изображения...")
+        
+        # Если image_path это объект PIL.Image
+        if isinstance(image_path, Image.Image):
+            img = image_path
+        else:
+            # Если это объект Django ImageField или FieldFile
+            try:
+                from django.core.files.storage import default_storage
+                from django.core.files.base import ContentFile
+                import io
+                
+                # Открываем изображение через временный файл
+                with io.BytesIO(default_storage.open(image_path.name).read()) as f:
+                    img = Image.open(f)
+                    # Создаем копию, чтобы избежать ошибок с закрытым файлом
+                    img = img.copy()
+            except:
+                # Последняя попытка - открыть файл напрямую
+                img = Image.open(image_path)
+                
+        print(f"[AI] Изображение получено, размер: {img.size}, режим: {img.mode}")
+        
         # Преобразуем в RGB в случае, если изображение имеет другой формат
         if img.mode != 'RGB':
+            print(f"[AI] Конвертируем изображение из {img.mode} в RGB")
             img = img.convert('RGB')
         
         # Изменяем размер под требуемый для модели (224x224)
+        print("[AI] Изменяем размер изображения для модели...")
         img = img.resize((224, 224))
         img_array = img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         img_array = preprocess_input(img_array)
         
         # Получаем предсказания модели
+        print("[AI] Выполняем предсказание моделью...")
         predictions = model.predict(img_array)
         
         # Декодируем предсказания (получаем топ-5 классов)
+        print("[AI] Декодируем предсказания...")
         decoded_predictions = decode_predictions(predictions, top=5)[0]
+        print(f"[AI] Предсказания: {decoded_predictions}")
         
         # Получаем цветовую палитру
+        print("[AI] Анализируем цвета...")
         colors = analyze_colors(img)
+        print(f"[AI] Определенные цвета: {colors}")
         
         # Формируем описание
+        print("[AI] Генерируем описание...")
         description = generate_description(decoded_predictions, colors, img)
+        print(f"[AI] Описание сгенерировано: {description[:100]}...")
         
         return description
     
     except Exception as e:
-        print(f"Ошибка в AI анализе изображения: {str(e)}")
+        print(f"[AI] ОШИБКА в AI анализе изображения: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return "Не удалось проанализировать изображение. Пожалуйста, добавьте описание вручную."
 
 def analyze_colors(img):

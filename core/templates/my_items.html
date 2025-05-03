@@ -47,6 +47,9 @@
                                     <span class="badge badge-danger mb-2">
                                         {{ item.get_status_display }}
                                     </span>
+                                    {% if not item.is_moderated %}
+                                        <span class="badge badge-warning ml-1">На проверке</span>
+                                    {% endif %}
                                     <h5 class="card-title">{{ item.title }}</h5>
                                     <p class="card-text small text-muted">
                                         <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
@@ -98,6 +101,9 @@
                                     <span class="badge badge-success mb-2">
                                         {{ item.get_status_display }}
                                     </span>
+                                    {% if not item.is_moderated %}
+                                        <span class="badge badge-warning ml-1">На проверке</span>
+                                    {% endif %}
                                     <h5 class="card-title">{{ item.title }}</h5>
                                     <p class="card-text small text-muted">
                                         <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
@@ -149,6 +155,9 @@
                                     <span class="badge {% if item.status == 'claimed' %}badge-warning{% else %}badge-info{% endif %} mb-2">
                                         {{ item.get_status_display }}
                                     </span>
+                                    {% if not item.is_moderated %}
+                                        <span class="badge badge-warning ml-1">На проверке</span>
+                                    {% endif %}
                                     <h5 class="card-title">{{ item.title }}</h5>
                                     <p class="card-text small text-muted">
                                         <i class="fas fa-map-marker-alt"></i> {{ item.location }}<br>
